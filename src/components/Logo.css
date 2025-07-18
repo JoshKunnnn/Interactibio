@@ -1,0 +1,108 @@
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.logo-icon {
+  width: 120px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.logo-text {
+  font-size: 64px;
+  font-weight: 700;
+  color: #14B8A6;
+  text-shadow: 
+    -1px -1px 0 #fff,
+    1px -1px 0 #fff,
+    -1px 1px 0 #fff,
+    1px 1px 0 #fff;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+/* Size variants */
+.logo-container.small .logo-icon {
+  width: 72px;
+  height: 72px;
+}
+
+.logo-container.small .logo-text {
+  font-size: 48px;
+}
+
+.logo-container.medium .logo-icon {
+  width: 96px;
+  height: 96px;
+}
+
+.logo-container.medium .logo-text {
+  font-size: 64px;
+}
+
+.logo-container.large .logo-icon {
+  width: 128px;
+  height: 128px;
+}
+
+.logo-container.large .logo-text {
+  font-size: 84px;
+}
+
+.logo-container.xlarge .logo-icon {
+  width: 160px;
+  height: 160px;
+}
+
+.logo-container.xlarge .logo-text {
+  font-size: 112px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .logo-container .logo-text {
+    font-size: 40px;
+  }
+  
+  .logo-container.small .logo-text {
+    font-size: 32px;
+  }
+  
+  .logo-container.large .logo-text {
+    font-size: 56px;
+  }
+  
+  .logo-container.xlarge .logo-text {
+    font-size: 64px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-container .logo-text {
+    font-size: 36px;
+  }
+  
+  .logo-container.small .logo-text {
+    font-size: 28px;
+  }
+  
+  .logo-container.large .logo-text {
+    font-size: 48px;
+  }
+  
+  .logo-container.xlarge .logo-text {
+    font-size: 56px;
+  }
+} 

@@ -1,0 +1,109 @@
+.age-tracks {
+  background: #f8f9fa;
+}
+
+.tracks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.track-card {
+  background: #FFB3BA;
+  border-radius: 20px;
+  padding: 40px 30px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.track-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.track-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.track-icon {
+  font-size: 4rem;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+}
+
+.track-age {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.track-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.track-description {
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 30px;
+  font-size: 1rem;
+}
+
+.track-card .btn-secondary {
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .tracks-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .track-card {
+    padding: 30px 20px;
+  }
+  
+  .track-icon {
+    font-size: 3rem;
+    height: 60px;
+  }
+  
+  .track-title {
+    font-size: 1.3rem;
+  }
+  
+  .track-description {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tracks-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .track-card {
+    margin: 0 10px;
+  }
+} 

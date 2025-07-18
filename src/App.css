@@ -1,0 +1,10 @@
+.App {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #fffef7;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+} 
