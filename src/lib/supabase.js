@@ -4,18 +4,36 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
-// Debug: Log environment variables (remove in production)
+// Enhanced debug logging
 console.log('🔍 DEBUG - Supabase URL:', supabaseUrl);
 console.log('🔍 DEBUG - Supabase Key (first 20 chars):', supabaseKey ? supabaseKey.substring(0, 20) + '...' : 'undefined');
 console.log('🔍 DEBUG - Environment variables loaded:', !!supabaseUrl && !!supabaseKey);
 
-// Debug: Log environment variables (remove in production)
-console.log('🔍 DEBUG - Supabase URL:', supabaseUrl);
-console.log('🔍 DEBUG - Supabase Key (first 20 chars):', supabaseKey ? supabaseKey.substring(0, 20) + '...' : 'undefined');
-console.log('🔍 DEBUG - Environment variables loaded:', !!supabaseUrl && !!supabaseKey);
+// Validate environment variables
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ ERROR - Missing Supabase environment variables:');
+  console.error('   REACT_APP_SUPABASE_URL:', supabaseUrl ? '✓ Set' : '✗ Missing');
+  console.error('   REACT_APP_SUPABASE_ANON_KEY:', supabaseKey ? '✓ Set' : '✗ Missing');
+  throw new Error('Supabase environment variables are not configured. Please check your .env file or Vercel environment variables.');
+}
+
+// Validate URL format
+if (!supabaseUrl.startsWith('https://') || !supabaseUrl.includes('.supabase.co')) {
+  console.error('❌ ERROR - Invalid Supabase URL format:', supabaseUrl);
+  throw new Error('Invalid Supabase URL format. URL should start with https:// and contain .supabase.co');
+}
 
 // Create and export the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Test connection
+supabase.auth.getSession().then(({ data, error }) => {
+  if (error) {
+    console.error('❌ ERROR - Failed to connect to Supabase:', error);
+  } else {
+    console.log('✅ DEBUG - Supabase connection successful');
+  }
+});
 
 // Auth helper functions
 export const signUp = async (email, password, fullName) => {
