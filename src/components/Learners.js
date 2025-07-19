@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Learners.css';
-import learnersImage from '../assets/images/learners-studying.jpg';
 
 const Learners = () => {
   const navigate = useNavigate();
@@ -22,7 +21,7 @@ const Learners = () => {
           </div>
           <div className="learners-visuals">
             <div className="learners-image-container">
-              <img src={learnersImage} alt="Students learning together with books and tablet" className="learners-image" />
+              <img src="/images/studd.png" alt="Students learning together with books and tablet" className="learners-image" />
             </div>
           </div>
         </div>

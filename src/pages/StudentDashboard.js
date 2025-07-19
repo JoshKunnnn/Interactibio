@@ -16,7 +16,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Logo from '../components/Logo';
 import { 
   faMicroscope, 
-  faHandWave, 
+  faHandPaper, 
   faSignOutAlt, 
   faClock, 
   faStar, 
@@ -26,8 +26,7 @@ import {
   faChalkboardTeacher, 
   faGamepad,
   faPlus,
-  faCalendar,
-  faHandPaper
+  faCalendar
 } from '@fortawesome/free-solid-svg-icons';
 
 const StudentDashboard = () => {

@@ -83,10 +83,10 @@ const MitosisCardGamePlayer = ({ onGameComplete, gameData, onQuitGame }) => {
                   <span style={{ color: 'red', fontWeight: 'bold' }}>✘ Incorrect</span>
                 )}
                 <div style={{ fontSize: 12, color: '#888' }}>
-                  Your answer: {answers[idx] === 'significant' ? 'Significant' : 'Not Significant'}
+                  Your answer: {answers[idx] === 'significant' ? 'Significance' : 'Not Significance'}
                 </div>
                 <div style={{ fontSize: 12, color: '#888' }}>
-                  Correct answer: {card.correctAnswer === 'significant' ? 'Significant' : 'Not Significant'}
+                  Correct answer: {card.correctAnswer === 'significant' ? 'Significance' : 'Not Significance'}
                 </div>
               </div>
             </div>

@@ -9,6 +9,8 @@ const VennDiagramGame = ({ gameData, onGameComplete }) => {
   });
   const [isCompleted, setIsCompleted] = useState(false);
   const [showReview, setShowReview] = useState(false);
+  const [showReinforcement, setShowReinforcement] = useState(false);
+  const [reinforcementMsg, setReinforcementMsg] = useState('');
   const [score, setScore] = useState(0);
   const [draggedDescription, setDraggedDescription] = useState(null);
   const [dragOverSection, setDragOverSection] = useState(null);
@@ -115,8 +117,20 @@ const VennDiagramGame = ({ gameData, onGameComplete }) => {
     
     const finalScore = correctCount * 2; // 2 points per correct placement
     setScore(finalScore);
-    setIsCompleted(true);
-    setShowReview(true);
+    
+    // Calculate percent and show reinforcement
+    const percent = (correctCount / totalDescriptions) * 100;
+    if (percent >= 70) {
+      setReinforcementMsg('Great job!');
+    } else {
+      setReinforcementMsg('Keep practicing! Remember the key points for each learning activity.');
+    }
+    setShowReinforcement(true);
+    setTimeout(() => {
+      setShowReinforcement(false);
+      setIsCompleted(true);
+      setShowReview(true);
+    }, 2500);
   };
 
   const getAvailableDescriptions = () => {
@@ -208,6 +222,59 @@ const VennDiagramGame = ({ gameData, onGameComplete }) => {
 
   return (
     <div className="venn-diagram-game">
+      {showReinforcement && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.35)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 16,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            padding: '40px 48px',
+            minWidth: 340,
+            textAlign: 'center',
+            fontWeight: 700,
+            fontSize: 24,
+            color: reinforcementMsg === 'Great job!' ? '#16a34a' : '#222',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 24,
+          }}>
+            <div>{reinforcementMsg}</div>
+            <button
+              style={{
+                marginTop: 12,
+                padding: '10px 32px',
+                borderRadius: 8,
+                border: 'none',
+                background: '#2563eb',
+                color: '#fff',
+                fontWeight: 600,
+                fontSize: 18,
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px #0001',
+              }}
+              onClick={() => {
+                setShowReinforcement(false);
+                setIsCompleted(true);
+                setShowReview(true);
+              }}
+            >
+              Okay
+            </button>
+          </div>
+        </div>
+      )}
       <h2>Mitosis vs. Meiosis: The Great Divide!</h2>
       <p>Use the Venn Diagram to compare and contrast mitosis and meiosis. Drag and drop the key characteristics into the correct sections.</p>
       

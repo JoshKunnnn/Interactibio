@@ -4,16 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
-// Enhanced debug logging
-console.log('🔍 DEBUG - Supabase URL:', supabaseUrl);
-console.log('🔍 DEBUG - Supabase Key (first 20 chars):', supabaseKey ? supabaseKey.substring(0, 20) + '...' : 'undefined');
-console.log('🔍 DEBUG - Environment variables loaded:', !!supabaseUrl && !!supabaseKey);
-
 // Validate environment variables
 if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ ERROR - Missing Supabase environment variables:');
-  console.error('   REACT_APP_SUPABASE_URL:', supabaseUrl ? '✓ Set' : '✗ Missing');
-  console.error('   REACT_APP_SUPABASE_ANON_KEY:', supabaseKey ? '✓ Set' : '✗ Missing');
+  console.error('❌ ERROR - Missing Supabase environment variables');
   throw new Error('Supabase environment variables are not configured. Please check your .env file or Vercel environment variables.');
 }
 
@@ -25,15 +18,6 @@ if (!supabaseUrl.startsWith('https://') || !supabaseUrl.includes('.supabase.co')
 
 // Create and export the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Test connection
-supabase.auth.getSession().then(({ data, error }) => {
-  if (error) {
-    console.error('❌ ERROR - Failed to connect to Supabase:', error);
-  } else {
-    console.log('✅ DEBUG - Supabase connection successful');
-  }
-});
 
 // Auth helper functions
 export const signUp = async (email, password, fullName) => {
@@ -342,27 +326,53 @@ export const isStudentEnrolledInClass = async (studentId, subjectId) => {
 
 // Get all students enrolled in teacher's subjects with detailed progress
 export const getTeacherStudents = async (teacherId) => {
-  const { data, error } = await supabase
-    .from('student_enrollments')
-    .select(`
-      *,
-      students(
-        id,
-        full_name,
-        email,
-        created_at
-      ),
-      subjects(
-        id,
-        title,
-        class_code,
-        teacher_id
-      )
-    `)
-    .eq('subjects.teacher_id', teacherId)
-    .order('enrolled_at', { ascending: false });
+  console.log('getTeacherStudents called with teacherId:', teacherId);
   
-  return { data, error };
+  // First, let's get the teacher's subjects to debug
+  const { data: teacherSubjects, error: subjectsError } = await supabase
+    .from('subjects')
+    .select('id, title, class_code, teacher_id')
+    .eq('teacher_id', teacherId);
+  
+  console.log('Teacher subjects:', teacherSubjects);
+  console.log('Subjects error:', subjectsError);
+  
+  if (teacherSubjects && teacherSubjects.length > 0) {
+    const subjectIds = teacherSubjects.map(s => s.id);
+    console.log('Subject IDs for teacher:', subjectIds);
+    
+    // Get enrollments for these specific subjects
+    const { data, error } = await supabase
+      .from('student_enrollments')
+      .select(`
+        id,
+        student_id,
+        subject_id,
+        enrolled_at,
+        students!inner(
+          id,
+          full_name,
+          email,
+          created_at
+        ),
+        subjects!inner(
+          id,
+          title,
+          class_code,
+          teacher_id
+        )
+      `)
+      .in('subject_id', subjectIds)
+      .order('enrolled_at', { ascending: false });
+    
+    console.log('getTeacherStudents - Final result:', data);
+    console.log('getTeacherStudents - Error:', error);
+    
+    return { data, error };
+  } else {
+    console.log('No subjects found for teacher:', teacherId);
+    return { data: [], error: null };
+  }
 };
 
 // Get detailed student progress for all subjects

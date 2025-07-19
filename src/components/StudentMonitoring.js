@@ -79,7 +79,14 @@ const StudentTableRow = memo(({
   const subject = enrollment.subjects;
   const studentStats = analytics[student?.id] || {};
   
-  if (!student || !subject) return null;
+  console.log('StudentTableRow - enrollment:', enrollment);
+  console.log('StudentTableRow - student:', student);
+  console.log('StudentTableRow - subject:', subject);
+  
+  if (!student || !subject) {
+    console.warn('Missing student or subject data:', { student, subject });
+    return null;
+  }
 
   return (
     <tr key={`${student.id}-${subject.id}`} className="student-row-modern">
@@ -292,21 +299,36 @@ const StudentMonitoring = memo(({ teacherId }) => {
     setLoading(true);
     setError('');
     try {
+      console.log('Loading students for teacher:', teacherId);
       const startTime = performance.now();
       const { data, error } = await getTeacherStudents(teacherId);
       const duration = performance.now() - startTime;
       trackApiCall('getTeacherStudents', duration);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading students:', error);
+        throw error;
+      }
+      
+      console.log('Students data:', data);
+      console.log('First enrollment structure:', data?.[0]);
       setStudents(data || []);
       
       // Load analytics for each student
       const analyticsObj = {};
       const analyticsStartTime = performance.now();
       await Promise.all(
-        (data || []).map(async (enrollment) => {
+        (data || []).map(async (enrollment, index) => {
+          console.log(`Enrollment ${index}:`, enrollment);
+          console.log(`Enrollment ${index} students:`, enrollment.students);
+          console.log(`Enrollment ${index} subjects:`, enrollment.subjects);
+          
           const studentId = enrollment.students?.id;
-          if (!studentId) return;
+          if (!studentId) {
+            console.warn(`No student ID found in enrollment ${index}:`, enrollment);
+            console.warn('Available keys:', Object.keys(enrollment));
+            return;
+          }
           const { data: stats } = await getStudentAnalytics(studentId, timeFilter);
           analyticsObj[studentId] = stats;
         })
@@ -316,6 +338,7 @@ const StudentMonitoring = memo(({ teacherId }) => {
       
       setAnalytics(analyticsObj);
     } catch (err) {
+      console.error('Error in loadStudents:', err);
       setError(err.message);
     } finally {
       setLoading(false);

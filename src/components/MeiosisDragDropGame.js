@@ -5,6 +5,8 @@ const MeiosisDragDropGame = ({ gameData, onGameComplete }) => {
   const [placedAnswers, setPlacedAnswers] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
   const [showReview, setShowReview] = useState(false);
+  const [showReinforcement, setShowReinforcement] = useState(false);
+  const [reinforcementMsg, setReinforcementMsg] = useState('');
 
   const [score, setScore] = useState(0);
 
@@ -92,24 +94,36 @@ const MeiosisDragDropGame = ({ gameData, onGameComplete }) => {
     
     const finalScore = correctCount * 2; // 2 points per correct answer
     setScore(finalScore);
-    setIsCompleted(true);
-    setShowReview(true);
+    
+    // Calculate percent and show reinforcement
+    const percent = (correctCount / dropZones.length) * 100;
+    if (percent >= 70) {
+      setReinforcementMsg('Great job!');
+    } else {
+      setReinforcementMsg('Keep practicing! Remember the key points for each learning activity.');
+    }
+    setShowReinforcement(true);
+    setTimeout(() => {
+      setShowReinforcement(false);
+      setIsCompleted(true);
+      setShowReview(true);
+    }, 2500);
   };
 
   const handleFinishReview = () => {
     console.log('🔍 handleFinishReview called');
+    console.log('🔍 onGameComplete function:', onGameComplete);
+    console.log('🔍 score:', score);
+    console.log('🔍 placedAnswers:', placedAnswers);
+    
     if (onGameComplete) {
       console.log('🔍 Calling onGameComplete with score:', score);
-      onGameComplete({
-        gameType: 'meiosis-drag-drop',
-        score: score,
-        totalPossible: dropZones.length * 2,
-        answers: placedAnswers,
-        correctAnswers: dropZones.reduce((acc, zone) => {
-          acc[zone.id] = zone.correctAnswer;
-          return acc;
-        }, {})
-      });
+      try {
+        onGameComplete(score, placedAnswers);
+        console.log('🔍 onGameComplete called successfully');
+      } catch (error) {
+        console.error('🔍 Error calling onGameComplete:', error);
+      }
     } else {
       console.log('🔍 onGameComplete is not available');
     }
@@ -171,6 +185,59 @@ const MeiosisDragDropGame = ({ gameData, onGameComplete }) => {
 
   return (
     <div className="meiosis-game">
+      {showReinforcement && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.35)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 16,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            padding: '40px 48px',
+            minWidth: 340,
+            textAlign: 'center',
+            fontWeight: 700,
+            fontSize: 24,
+            color: reinforcementMsg === 'Great job!' ? '#16a34a' : '#222',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 24,
+          }}>
+            <div>{reinforcementMsg}</div>
+            <button
+              style={{
+                marginTop: 12,
+                padding: '10px 32px',
+                borderRadius: 8,
+                border: 'none',
+                background: '#2563eb',
+                color: '#fff',
+                fontWeight: 600,
+                fontSize: 18,
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px #0001',
+              }}
+              onClick={() => {
+                setShowReinforcement(false);
+                setIsCompleted(true);
+                setShowReview(true);
+              }}
+            >
+              Okay
+            </button>
+          </div>
+        </div>
+      )}
       <h2>Map the Meiosis Mission!</h2>
       <p>Click the descriptions below to place them in the correct stages of meiosis on the diagram.</p>
       

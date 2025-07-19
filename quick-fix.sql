@@ -1,17 +1,20 @@
--- Quick fix for teacher registration
--- Run this in your Supabase SQL Editor
+-- Quick fix to resolve 401 Unauthorized error
+-- Run this in Supabase SQL Editor to temporarily disable RLS for testing
 
--- Temporarily disable RLS on teachers table to allow registration
+-- Temporarily disable RLS on key tables for testing
 ALTER TABLE teachers DISABLE ROW LEVEL SECURITY;
-
--- Re-enable RLS with a simple policy that allows all operations for authenticated users
-ALTER TABLE teachers ENABLE ROW LEVEL SECURITY;
-
--- Allow authenticated users to do everything with teachers table
-CREATE POLICY "Allow authenticated users full access to teachers" ON teachers
-    FOR ALL USING (auth.role() = 'authenticated');
+ALTER TABLE students DISABLE ROW LEVEL SECURITY;
+ALTER TABLE subjects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE quiz_games DISABLE ROW LEVEL SECURITY;
+ALTER TABLE quiz_levels DISABLE ROW LEVEL SECURITY;
+ALTER TABLE question_bank DISABLE ROW LEVEL SECURITY;
+ALTER TABLE level_questions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE student_progress DISABLE ROW LEVEL SECURITY;
+ALTER TABLE student_answers DISABLE ROW LEVEL SECURITY;
+ALTER TABLE student_enrollments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE puzzle_games DISABLE ROW LEVEL SECURITY;
 
 -- Also ensure subjects table allows reading for students (for class codes)
-DROP POLICY IF EXISTS "Anyone can read active subjects" ON subjects;
-CREATE POLICY "Anyone can read active subjects" ON subjects
-    FOR SELECT USING (true); 
+-- This should already be in place from the RLS policies
+
+-- Note: This is for testing only. Re-enable RLS and apply proper policies for production. 

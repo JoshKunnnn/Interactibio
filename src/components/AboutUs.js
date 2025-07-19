@@ -12,7 +12,7 @@ const AboutUs = () => {
               <div className="feature-icon">💻</div>
               <h3 className="feature-title">Technology-Integrated</h3>
               <p className="feature-desc">
-                InteractiBIO harnesses the power of digital tools to make biology lessons more accessible, engaging, and aligned with 21st-century learning needs.
+              Digital tools for engaging our type of learners today.
               </p>
             </div>
             <div className="feature-item">
@@ -26,21 +26,22 @@ const AboutUs = () => {
               <div className="feature-icon">🎯</div>
               <h3 className="feature-title">Interactive Assessment</h3>
               <p className="feature-desc">
-                Learners actively participate in lessons through click-based, drag-and-drop, and real-time exercises that reinforce understanding beyond traditional pen-paper assessment and passive reading.
+              Click, drag-and-drop, and real-time learning
               </p>
             </div>
             <div className="feature-item">
               <div className="feature-icon">⚡</div>
               <h3 className="feature-title">Real-Time Feedbacking</h3>
               <p className="feature-desc">
-                Students and teachers get immediate responses and insights, helping track progress, correct misunderstandings, and support timely learning interventions.
+              Instant responses for progress tracking
+
               </p>
             </div>
             <div className="feature-item">
               <div className="feature-icon">🌱</div>
               <h3 className="feature-title">Eco-Friendly Learning</h3>
               <p className="feature-desc">
-                As a fully digital platform, InteractiBIO eliminates the need for printed worksheets, reducing paper waste and supporting SDG 15: Life on Land by promoting sustainable, nature-friendly education.
+              Paperless assessment platform supporting sustainable education
               </p>
             </div>
           </div>

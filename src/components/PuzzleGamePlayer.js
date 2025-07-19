@@ -14,6 +14,8 @@ function MitosisCardGame({ cards, onComplete }) {
   const [feedbacks, setFeedbacks] = React.useState([]); // store feedback for all cards
   const [score, setScore] = React.useState(0);
   const [showSummary, setShowSummary] = React.useState(false);
+  const [showReinforcement, setShowReinforcement] = React.useState(false);
+  const [reinforcementMsg, setReinforcementMsg] = React.useState('');
   const [hovered, setHovered] = React.useState(null);
 
   const currentCard = cards[currentIndex];
@@ -30,22 +32,85 @@ function MitosisCardGame({ cards, onComplete }) {
       if (currentIndex + 1 >= cards.length) {
         setShowSummary(true);
         // Do NOT call onComplete yet; wait for Finish button
-      } else {
-        setCurrentIndex(i => i + 1);
-        setFlipped(false);
-        setAnswer(null);
-      }
-    }, 700); // short delay for feedback
-  };
+          } else {
+      setCurrentIndex(i => i + 1);
+      setFlipped(false);
+      setAnswer(null);
+    }
+  }, 700); // short delay for feedback
+};
 
   const handleFinish = () => {
-    onComplete(score);
+    // Calculate percent and show reinforcement
+    const percent = (score / (cards.length * 5)) * 100;
+    if (percent >= 70) {
+      setReinforcementMsg('Great job!');
+    } else {
+      setReinforcementMsg('Keep practicing! Remember the key points for each learning activity.');
+    }
+    setShowReinforcement(true);
+    setTimeout(() => {
+      setShowReinforcement(false);
+      onComplete(score);
+    }, 2500);
   };
 
   if (showSummary) {
     const totalCorrect = feedbacks.filter(Boolean).length;
     return (
       <div className="review-stage">
+        {showReinforcement && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.35)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <div style={{
+              background: '#fff',
+              borderRadius: 16,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+              padding: '40px 48px',
+              minWidth: 340,
+              textAlign: 'center',
+              fontWeight: 700,
+              fontSize: 24,
+              color: reinforcementMsg === 'Great job!' ? '#16a34a' : '#222',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 24,
+            }}>
+              <div>{reinforcementMsg}</div>
+              <button
+                style={{
+                  marginTop: 12,
+                  padding: '10px 32px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: '#2563eb',
+                  color: '#fff',
+                  fontWeight: 600,
+                  fontSize: 18,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px #0001',
+                }}
+                onClick={() => {
+                  setShowReinforcement(false);
+                  onComplete(score);
+                }}
+              >
+                Okay
+              </button>
+            </div>
+          </div>
+        )}
         <div className="review-header">
           <h3>🃏 Mitosis Card Game Review</h3>
           <p>Let's review your answers for the mitosis card game.</p>
@@ -64,7 +129,7 @@ function MitosisCardGame({ cards, onComplete }) {
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 8, color: '#2d3748' }}>{card.question}</div>
                     <div style={{ fontSize: 14, color: '#555', marginBottom: 4 }}>
-                      Your answer: <strong>{card.correctAnswer === 'significant' ? 'Significant' : 'Not Significant'}</strong>
+                      Your answer: <strong>{card.correctAnswer === 'significant' ? 'Significance' : 'Not Significance'}</strong>
                       {typeof feedbacks[idx] !== 'undefined' && (
                         <span style={{ marginLeft: 8, color: isCorrect ? 'green' : 'red', fontWeight: 600 }}>
                           {isCorrect ? '✅' : '❌'}
@@ -72,7 +137,7 @@ function MitosisCardGame({ cards, onComplete }) {
                       )}
                     </div>
                     <div style={{ fontSize: 13, color: '#888' }}>
-                      Correct answer: <strong>{card.correctAnswer === 'significant' ? 'Significant' : 'Not Significant'}</strong>
+                      Correct answer: <strong>{card.correctAnswer === 'significant' ? 'Significance' : 'Not Significance'}</strong>
                     </div>
                   </div>
                 </div>
@@ -493,6 +558,9 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
   const [vennDiagramAnswers, setVennDiagramAnswers] = useState({}); // Add state for venn diagram answers
 
   const [teacherFillBlanksAnswers, setTeacherFillBlanksAnswers] = useState({}); // Add state for teacher fill in the blanks answers
+  const [showReinforcement, setShowReinforcement] = useState(false);
+  const [reinforcementMsg, setReinforcementMsg] = useState('');
+  const [reinforcementGameState, setReinforcementGameState] = useState('');
   const imageRef = useRef(null);
   const imageRef2 = useRef(null);
   const hasCalledOnGameComplete = useRef(false);
@@ -661,6 +729,11 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [debugMode, gameState, score]);
+
+  // Monitor gameState changes
+  useEffect(() => {
+    console.log('🔍 gameState changed to:', gameState);
+  }, [gameState]);
 
   // Combined Question handlers
   const handleCombinedDragStart = (e, option) => {
@@ -874,6 +947,21 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
     e.dataTransfer.dropEffect = 'move';
   };
 
+  const showReinforcementModal = (score, totalPossible, nextState) => {
+    const percent = (score / totalPossible) * 100;
+    if (percent >= 70) {
+      setReinforcementMsg('Great job!');
+    } else {
+      setReinforcementMsg('Keep practicing! Remember the key points for each learning activity.');
+    }
+    setReinforcementGameState(nextState);
+    setShowReinforcement(true);
+    setTimeout(() => {
+      setShowReinforcement(false);
+      setGameState(nextState);
+    }, 2500);
+  };
+
   const handleDrop = (e, slotIndex) => {
     e.preventDefault();
     
@@ -895,11 +983,11 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
       const completedPieces = newGridSlots.filter(slot => slot !== null).length;
       if (completedPieces === 16) {
         setScore(score + 10);
-        // Move to appropriate question based on current puzzle
+        // Show reinforcement before moving to next stage
         if (gameState === 'puzzle1') {
-          setTimeout(() => setGameState('question1'), 1000);
+          showReinforcementModal(10, 10, 'question1');
         } else if (gameState === 'puzzle2') {
-          setTimeout(() => setGameState('question2'), 1000);
+          showReinforcementModal(10, 10, 'question2');
         }
       }
     } else {
@@ -963,7 +1051,8 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
 
   const handleVocabularyComplete = (vocabularyScore) => {
     setScore(score + vocabularyScore);
-    setGameState('mitosis_sorting');
+    // Show reinforcement before moving to next stage
+    showReinforcementModal(vocabularyScore, 20, 'mitosis_sorting');
   };
 
   const calculateFinalScore = () => {
@@ -1290,6 +1379,58 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
 
   return (
     <div className="puzzle-game-player">
+      {showReinforcement && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.35)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 16,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            padding: '40px 48px',
+            minWidth: 340,
+            textAlign: 'center',
+            fontWeight: 700,
+            fontSize: 24,
+            color: reinforcementMsg === 'Great job!' ? '#16a34a' : '#222',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 24,
+          }}>
+            <div>{reinforcementMsg}</div>
+            <button
+              style={{
+                marginTop: 12,
+                padding: '10px 32px',
+                borderRadius: 8,
+                border: 'none',
+                background: '#2563eb',
+                color: '#fff',
+                fontWeight: 600,
+                fontSize: 18,
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px #0001',
+              }}
+              onClick={() => {
+                setShowReinforcement(false);
+                setGameState(reinforcementGameState);
+              }}
+            >
+              Okay
+            </button>
+          </div>
+        </div>
+      )}
       <div className="game-header">
         <h2>Biology Quiz Game</h2>
         <div className="header-right">
@@ -1301,226 +1442,11 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
           >
             ❌ Quit
           </button>
-          {/* Debug button hidden for production
-          <button 
-            onClick={toggleDebugMode}
-            className={`debug-toggle ${debugMode ? 'active' : ''}`}
-            title="Toggle Debug Mode (Ctrl+D)"
-          >
-            🐛 Debug
-          </button>
-          */}
+
         </div>
       </div>
 
-      {/* Debug panel hidden for production
-      {debugMode && (
-        <div className="debug-panel">
-          <div className="debug-info">
-            <strong>🐛 Debug Mode Active</strong>
-            <span>Current Stage: {gameState}</span>
-            <span>Press 'S' to skip to next stage</span>
-            <span>Flow: puzzle1 → question1 → review1 → puzzle2 → question2 → review2 → combined → review3 → vocabulary → mitosis_learning_screen → mitosis_sorting → mitosis_review → timeline_learning_screen → timeline_game → timeline_review → mitosis_card_learning_screen → mitosis_card_game → meiosis_learning_screen → meiosis_fill_blank → complete</span>
-          </div>
-          <div className="debug-controls">
-            <button onClick={skipToNextStage} className="skip-btn">
-              ⏭️ Skip to Next Stage
-            </button>
-            <button onClick={toggleDebugDropdownMode} className="dropdown-btn">
-              {debugDropdownMode ? '🔽 Hide Game Selector' : '🔼 Show Game Selector'}
-            </button>
-          </div>
-          
-          {debugDropdownMode && (
-            <div className="debug-dropdown">
-              <h4>Select Game to Test:</h4>
-              <div className="game-options">
-                <button 
-                  onClick={() => selectDebugGame('learning_screen')}
-                  className={`game-option ${selectedDebugGame === 'learning_screen' ? 'selected' : ''}`}
-                >
-                  📚 Learning Screen
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('puzzle1')}
-                  className={`game-option ${selectedDebugGame === 'puzzle1' ? 'selected' : ''}`}
-                >
-                  🧩 Puzzle 1
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('question1')}
-                  className={`game-option ${selectedDebugGame === 'question1' ? 'selected' : ''}`}
-                >
-                  ❓ Question 1
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('question1_review')}
-                  className={`game-option ${selectedDebugGame === 'question1_review' ? 'selected' : ''}`}
-                >
-                  📋 Question 1 Review
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('puzzle2')}
-                  className={`game-option ${selectedDebugGame === 'puzzle2' ? 'selected' : ''}`}
-                >
-                  🧩 Puzzle 2
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('question2')}
-                  className={`game-option ${selectedDebugGame === 'question2' ? 'selected' : ''}`}
-                >
-                  ❓ Question 2
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('question2_review')}
-                  className={`game-option ${selectedDebugGame === 'question2_review' ? 'selected' : ''}`}
-                >
-                  📋 Question 2 Review
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('combined_question')}
-                  className={`game-option ${selectedDebugGame === 'combined_question' ? 'selected' : ''}`}
-                >
-                  🔗 Combined Question
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('combined_review')}
-                  className={`game-option ${selectedDebugGame === 'combined_review' ? 'selected' : ''}`}
-                >
-                  📋 Combined Review
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('single_image_question')}
-                  className={`game-option ${selectedDebugGame === 'single_image_question' ? 'selected' : ''}`}
-                >
-                  🖼️ Single Image Question
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('single_image_review')}
-                  className={`game-option ${selectedDebugGame === 'single_image_review' ? 'selected' : ''}`}
-                >
-                  📋 Single Image Review
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('vocabulary')}
-                  className={`game-option ${selectedDebugGame === 'vocabulary' ? 'selected' : ''}`}
-                >
-                  📚 Vocabulary Game
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('mitosis_learning_screen')}
-                  className={`game-option ${selectedDebugGame === 'mitosis_learning_screen' ? 'selected' : ''}`}
-                >
-                  🧬 Mitosis Learning Screen
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('mitosis_sorting')}
-                  className={`game-option ${selectedDebugGame === 'mitosis_sorting' ? 'selected' : ''}`}
-                >
-                  🔄 Mitosis Sorting
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('mitosis_review')}
-                  className={`game-option ${selectedDebugGame === 'mitosis_review' ? 'selected' : ''}`}
-                >
-                  📋 Mitosis Review
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('timeline_learning_screen')}
-                  className={`game-option ${selectedDebugGame === 'timeline_learning_screen' ? 'selected' : ''}`}
-                >
-                  ⏰ Timeline Learning Screen
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('timeline_game')}
-                  className={`game-option ${selectedDebugGame === 'timeline_game' ? 'selected' : ''}`}
-                >
-                  ⏰ Timeline Game
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('timeline_review')}
-                  className={`game-option ${selectedDebugGame === 'timeline_review' ? 'selected' : ''}`}
-                >
-                  📋 Timeline Review
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('mitosis_card_learning_screen')}
-                  className={`game-option ${selectedDebugGame === 'mitosis_card_learning_screen' ? 'selected' : ''}`}
-                >
-                  🃏 Mitosis Card Learning Screen
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('mitosis_card_game')}
-                  className={`game-option ${selectedDebugGame === 'mitosis_card_game' ? 'selected' : ''}`}
-                >
-                  🃏 Mitosis Card Game
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('meiosis_learning_screen')}
-                  className={`game-option ${selectedDebugGame === 'meiosis_learning_screen' ? 'selected' : ''}`}
-                >
-                  🧬 Meiosis Learning Screen
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('meiosis_fill_blank')}
-                  className={`game-option ${selectedDebugGame === 'meiosis_fill_blank' ? 'selected' : ''}`}
-                >
-                  ✏️ Meiosis Fill Blank
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('meiosis_fill_blank_review')}
-                  className={`game-option ${selectedDebugGame === 'meiosis_fill_blank_review' ? 'selected' : ''}`}
-                >
-                  📋 Meiosis Fill Blank Review
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('meiosis_drag_drop_learning_screen')}
-                  className={`game-option ${selectedDebugGame === 'meiosis_drag_drop_learning_screen' ? 'selected' : ''}`}
-                >
-                  🎯 Meiosis Drag Drop Learning Screen
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('meiosis_drag_drop')}
-                  className={`game-option ${selectedDebugGame === 'meiosis_drag_drop' ? 'selected' : ''}`}
-                >
-                  🎯 Meiosis Drag & Drop
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('venn_diagram_learning_screen')}
-                  className={`game-option ${selectedDebugGame === 'venn_diagram_learning_screen' ? 'selected' : ''}`}
-                >
-                  🔵 Venn Diagram Learning Screen
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('venn_diagram')}
-                  className={`game-option ${selectedDebugGame === 'venn_diagram' ? 'selected' : ''}`}
-                >
-                  🔵 Venn Diagram
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('teacher_fill_blanks_learning_screen')}
-                  className={`game-option ${selectedDebugGame === 'teacher_fill_blanks_learning_screen' ? 'selected' : ''}`}
-                >
-                  📝 Teacher Fill Blanks Learning Screen
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('teacher_fill_blanks')}
-                  className={`game-option ${selectedDebugGame === 'teacher_fill_blanks' ? 'selected' : ''}`}
-                >
-                  📝 Teacher Fill in the Blanks
-                </button>
-                <button 
-                  onClick={() => selectDebugGame('game_complete')}
-                  className={`game-option ${selectedDebugGame === 'game_complete' ? 'selected' : ''}`}
-                >
-                  🏁 Game Complete
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-      */}
+
 
       {gameState === 'learning_screen' && (
         <div className="learning-screen">
@@ -2577,7 +2503,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
             },
             {
               id: 8,
-              question: "Meiosis occurs in two stages, ______ (Mitosis I/Meiosis I) and ______ (Mitosis II/Meiosis II), to reduce the chromosome number by half.",
+              question: "Meiosis occurs in two stages, ______ and ______, to reduce the chromosome number by half.",
               options: ["Meiosis I", "Meiosis II"],
               correct_answer: ["Meiosis I", "Meiosis II"],
               explanation: "Meiosis I and Meiosis II are the two stages of meiosis, occurring in that specific order."
@@ -2646,58 +2572,64 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
           {console.log('🔍 About to render MeiosisDragDropGame, gameState:', gameState)}
           <MeiosisDragDropGame
             gameData={gameData}
-            onComplete={(score, answers) => {
+            onGameComplete={(score, answers) => {
               console.log('🔍 MeiosisDragDropGame completed with score:', score);
+              console.log('🔍 MeiosisDragDropGame completed with answers:', answers);
+              console.log('🔍 Current gameState before change:', gameState);
               console.log('🔍 Setting gameState to venn_diagram_learning_screen');
               setScore(prev => prev + score);
               setMeiosisDragAnswers(answers);
               setGameState('venn_diagram_learning_screen');
+              console.log('🔍 gameState should now be venn_diagram_learning_screen');
             }}
           />
         </>
       )}
 
       {gameState === 'venn_diagram_learning_screen' && (
-        <div className="learning-screen">
-          <div className="learning-container">
-            <div className="learning-image-container">
-              <img 
-                src="/images/learning 7.png" 
-                alt="Learning Instructions" 
-                className="learning-image"
-                style={{
-                  width: '100%',
-                  height: 'auto',
-                  maxWidth: '100vw',
-                  maxHeight: '100vh',
-                  objectFit: 'contain'
-                }}
-              />
-            </div>
-            <div className="learning-actions">
-              <button 
-                onClick={() => setGameState('venn_diagram')}
-                className="start-puzzle-btn"
-                style={{
-                  padding: '16px 32px',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  backgroundColor: '#04796b',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.3s ease',
-                  marginTop: '20px'
-                }}
-                onMouseOver={(e) => e.target.style.backgroundColor = '#036c5f'}
-                onMouseOut={(e) => e.target.style.backgroundColor = '#04796b'}
-              >
-                Continue
-              </button>
+        <>
+          {console.log('🔍 Rendering venn_diagram_learning_screen, gameState:', gameState)}
+          <div className="learning-screen">
+            <div className="learning-container">
+              <div className="learning-image-container">
+                <img 
+                  src="/images/learning 7.png" 
+                  alt="Learning Instructions" 
+                  className="learning-image"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    maxWidth: '100vw',
+                    maxHeight: '100vh',
+                    objectFit: 'contain'
+                  }}
+                />
+              </div>
+              <div className="learning-actions">
+                <button 
+                  onClick={() => setGameState('venn_diagram')}
+                  className="start-puzzle-btn"
+                  style={{
+                    padding: '16px 32px',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    backgroundColor: '#04796b',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.3s ease',
+                    marginTop: '20px'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#036c5f'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#04796b'}
+                >
+                  Continue
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {gameState === 'venn_diagram' && (
