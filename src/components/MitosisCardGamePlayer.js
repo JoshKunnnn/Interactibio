@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './PuzzleGamePlayer.css'; // Reuse some styles for consistency
 
 // Placeholder/mock data for 3 cards
@@ -40,6 +40,77 @@ const MitosisCardGamePlayer = ({ onGameComplete, gameData, onQuitGame }) => {
   const [answers, setAnswers] = useState(Array(cards.length).fill(null));
   const [currentCard, setCurrentCard] = useState(0);
   const [showReview, setShowReview] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
+  const [startTime] = useState(Date.now());
+
+  // Keyboard shortcuts for debug mode
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        toggleDebugMode();
+      }
+      if (debugMode && e.key === 's' && !e.ctrlKey) {
+        e.preventDefault();
+        skipToNextCard();
+      }
+      if (debugMode && e.key === 'c' && !e.ctrlKey) {
+        e.preventDefault();
+        completeGame();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [debugMode, currentCard]);
+
+  // Add null check to prevent errors
+  if (!gameData) {
+    return (
+      <div className="mitosis-card-game-container">
+        <div className="game-header">
+          <h2>Mitosis Card Game</h2>
+          <div className="header-right">
+            <div className="game-score">Score: 0</div>
+            {onQuitGame && (
+              <button 
+                onClick={onQuitGame}
+                className="quit-btn"
+                title="Quit Game"
+              >
+                ❌ Quit
+              </button>
+            )}
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', padding: '50px', color: '#666' }}>
+          <h3>Loading game data...</h3>
+          <p>Please wait while the game loads.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Debug functions
+  const toggleDebugMode = () => {
+    setDebugMode(!debugMode);
+  };
+
+  const skipToNextCard = () => {
+    if (currentCard < cards.length - 1) {
+      setCurrentCard(currentCard + 1);
+      setFlipped(f => f.map((val, i) => (i === currentCard + 1 ? true : val)));
+    } else {
+      setShowReview(true);
+    }
+  };
+
+  const completeGame = () => {
+    // Fill all answers with correct answers
+    const correctAnswers = cards.map(card => card.correctAnswer);
+    setAnswers(correctAnswers);
+    setShowReview(true);
+  };
 
   const handleFlip = (idx) => {
     setFlipped(f => f.map((val, i) => (i === idx ? true : val)));
@@ -101,16 +172,41 @@ const MitosisCardGamePlayer = ({ onGameComplete, gameData, onQuitGame }) => {
     <div className="mitosis-card-game-container">
       <div className="game-header">
         <h2>Mitosis Card Game</h2>
-        {onQuitGame && (
-          <button 
-            onClick={onQuitGame}
-            className="quit-btn"
-            title="Quit Game"
-          >
-             Quit
-          </button>
-        )}
+        <div className="header-right">
+          <div className="game-score">Score: {score}</div>
+          {/* Debug button removed, logic remains */}
+          {onQuitGame && (
+            <button 
+              onClick={onQuitGame}
+              className="quit-btn"
+              title="Quit Game"
+            >
+              ❌ Quit
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Debug Panel */}
+      {debugMode && (
+        <div className="debug-panel">
+          <div className="debug-info">
+            <span>🎮 Current Card: {currentCard + 1} / {cards.length}</span>
+            <span>📊 Score: {score}</span>
+            <span>⏱️ Time: {Math.floor((Date.now() - startTime) / 1000)}s</span>
+          </div>
+          
+          <div className="debug-controls">
+            <button onClick={skipToNextCard} className="skip-btn">
+              ⏭️ Skip Card (S)
+            </button>
+            <button onClick={completeGame} className="skip-btn">
+              🎯 Complete Game (C)
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mitosis-card-area">
         {cards.map((card, idx) => (
           <div

@@ -15,47 +15,84 @@ const VennDiagramGame = ({ gameData, onGameComplete }) => {
   const [draggedDescription, setDraggedDescription] = useState(null);
   const [dragOverSection, setDragOverSection] = useState(null);
 
-  // Get descriptions from gameData or use defaults
-  const descriptions = gameData?.venn_diagram_descriptions || [
-    "1 division",
-    "Produces 2 daughter cells", 
-    "Diploid",
-    "Produces somatic cells",
-    "Produces genetically identical cells",
-    "Occurs in somatic cells throughout the body",
-    "Cell division",
-    "Goal of producing new cells",
-    "Cytokinesis",
-    "Spindle formation",
-    "Crossing over and independent assortment occur.",
-    "2 divisions",
-    "Produces 4 daughter cells",
-    "Haploid",
-    "Produces gametes",
-    "Introduces genetic variation",
-    "Occurs only in reproductive organs"
-  ];
+  // Debug logging
+  console.log('🔍 VennDiagramGame received gameData:', gameData);
+  console.log('🔍 Venn diagram descriptions from gameData:', gameData?.venn_diagram_descriptions);
+  console.log('🔍 Venn diagram placements from gameData:', gameData?.venn_diagram_correct_placements);
 
-  // Get correct placements from gameData or use defaults
-  const correctPlacements = gameData?.venn_diagram_correct_placements || {
-    "0": "mitosis",
-    "1": "mitosis", 
-    "2": "mitosis",
-    "3": "mitosis",
-    "4": "mitosis",
-    "5": "mitosis",
-    "6": "both",
-    "7": "both",
-    "8": "both", 
-    "9": "both",
-    "10": "meiosis",
-    "11": "meiosis",
-    "12": "meiosis",
-    "13": "meiosis",
-    "14": "meiosis",
-    "15": "meiosis",
-    "16": "meiosis"
+  // Helper function to safely parse jsonb data
+  const parseJsonbData = (data) => {
+    if (!data) return null;
+    if (Array.isArray(data)) return data;
+    if (typeof data === 'object' && !Array.isArray(data)) return data;
+    if (typeof data === 'string') {
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        console.error('Failed to parse jsonb data:', data, e);
+        return null;
+      }
+    }
+    return null;
   };
+
+  // Parse the data properly
+  const parsedDescriptions = parseJsonbData(gameData?.venn_diagram_descriptions);
+  const parsedPlacements = parseJsonbData(gameData?.venn_diagram_correct_placements);
+
+  console.log('🔍 Parsed descriptions:', parsedDescriptions);
+  console.log('🔍 Parsed placements:', parsedPlacements);
+  console.log('🔍 Are parsed descriptions an array?', Array.isArray(parsedDescriptions));
+  console.log('🔍 Length of parsed descriptions:', parsedDescriptions?.length);
+
+  // Get descriptions from gameData - prioritize database data
+  const descriptions = (parsedDescriptions && Array.isArray(parsedDescriptions) && parsedDescriptions.length > 0) 
+    ? parsedDescriptions 
+    : [
+        "1 division",
+        "Produces 2 daughter cells", 
+        "Diploid",
+        "Produces somatic cells",
+        "Produces genetically identical cells",
+        "Occurs in somatic cells throughout the body",
+        "Cell division",
+        "Goal of producing new cells",
+        "Cytokinesis",
+        "Spindle formation",
+        "Crossing over and independent assortment occur.",
+        "2 divisions",
+        "Produces 4 daughter cells",
+        "Haploid",
+        "Produces gametes",
+        "Introduces genetic variation",
+        "Occurs only in reproductive organs"
+      ];
+
+  // Get correct placements from gameData - prioritize database data
+  const correctPlacements = (parsedPlacements && typeof parsedPlacements === 'object' && Object.keys(parsedPlacements).length > 0)
+    ? parsedPlacements
+    : {
+        "0": "mitosis",
+        "1": "mitosis", 
+        "2": "mitosis",
+        "3": "mitosis",
+        "4": "mitosis",
+        "5": "mitosis",
+        "6": "both",
+        "7": "both",
+        "8": "both", 
+        "9": "both",
+        "10": "meiosis",
+        "11": "meiosis",
+        "12": "meiosis",
+        "13": "meiosis",
+        "14": "meiosis",
+        "15": "meiosis",
+        "16": "meiosis"
+      };
+
+  console.log('🔍 Final descriptions being used:', descriptions);
+  console.log('🔍 Final placements being used:', correctPlacements);
 
   const handleDragStart = (e, descriptionIndex) => {
     if (isCompleted) return;
@@ -277,6 +314,9 @@ const VennDiagramGame = ({ gameData, onGameComplete }) => {
       )}
       <h2>Mitosis vs. Meiosis: The Great Divide!</h2>
       <p>Use the Venn Diagram to compare and contrast mitosis and meiosis. Drag and drop the key characteristics into the correct sections.</p>
+      <div className="puzzle-direction-text">
+        <p><strong>Direction:</strong> Use the Venn Diagram to compare and contrast mitosis and meiosis. Drag and drop the key characteristics into the correct sections: the left for mitosis, the right for meiosis, and the overlapping middle section for shared features.</p>
+      </div>
       
       <div className="venn-container">
         {/* Venn Diagram */}

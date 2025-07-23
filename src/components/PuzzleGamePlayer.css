@@ -554,6 +554,31 @@
   font-size: 1.1rem;
 }
 
+.puzzle-direction-text {
+  margin-top: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 12px;
+  border-left: 4px solid #0ea5e9;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
+}
+
+.puzzle-direction-text p {
+  color: #1e293b;
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.puzzle-direction-text p:last-child {
+  margin-bottom: 0;
+}
+
+.puzzle-direction-text strong {
+  color: #0c4a6e;
+  font-weight: 600;
+}
+
 /* Drag & Drop Puzzle Layout */
 .puzzle-game-container {
   display: flex;

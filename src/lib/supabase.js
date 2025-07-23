@@ -92,11 +92,17 @@ export const updateSubject = async (subjectId, subjectData) => {
 };
 
 export const getTeacherSubjects = async (teacherId) => {
+  console.log('getTeacherSubjects called with teacherId:', teacherId);
+  
   const { data, error } = await supabase
     .from('subjects')
     .select('*')
     .eq('teacher_id', teacherId)
     .eq('is_active', true);
+  
+  console.log('getTeacherSubjects result:', data);
+  console.log('getTeacherSubjects error:', error);
+  
   return { data, error };
 };
 
@@ -150,12 +156,25 @@ export const createPuzzleGame = async (puzzleGameData) => {
 };
 
 export const getPuzzleGamesBySubject = async (subjectId) => {
+  console.log('🔍 getPuzzleGamesBySubject called with subjectId:', subjectId);
+  
   const { data, error } = await supabase
     .from('puzzle_games')
     .select('*')
     .eq('subject_id', subjectId)
     .eq('is_active', true)
     .order('created_at', { ascending: false });
+  
+  console.log('🔍 getPuzzleGamesBySubject result:', data);
+  console.log('🔍 getPuzzleGamesBySubject error:', error);
+  
+  // Add specific debugging for Venn diagram data
+  if (data && data.length > 0) {
+    data.forEach((game, index) => {
+      console.log(`🔍 Game ${index + 1} venn_diagram_descriptions:`, game.venn_diagram_descriptions);
+      console.log(`🔍 Game ${index + 1} venn_diagram_correct_placements:`, game.venn_diagram_correct_placements);
+    });
+  }
   
   return { data, error };
 };

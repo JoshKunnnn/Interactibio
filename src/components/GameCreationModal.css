@@ -672,7 +672,7 @@
 }
 
 .timeline-image-card img {
-  width: 100%;
+    width: 100%;
   height: 80px;
   object-fit: cover;
   display: block;
@@ -857,10 +857,10 @@
 
 .upload-card-content {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
+    flex-direction: column;
+    gap: 12px;
+  }
+  
 .timeline-image-input {
   display: none;
 }
@@ -955,7 +955,7 @@
 }
 
 .showcase-image-container img {
-  width: 100%;
+    width: 100%;
   height: 100%;
   object-fit: cover;
 }
@@ -1194,7 +1194,7 @@
   display: block;
   margin-top: 8px;
   color: #718096;
-  font-size: 12px;
+    font-size: 12px;
 }
 
 .teacher-fill-blanks-questions {
@@ -1594,9 +1594,9 @@
 .image-preview {
   margin-top: 8px;
   text-align: center;
-}
-
-.image-preview img {
+  }
+  
+  .image-preview img {
   width: 80px;
   height: 80px;
   object-fit: cover;

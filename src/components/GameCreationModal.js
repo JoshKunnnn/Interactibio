@@ -131,6 +131,60 @@ const GameCreationModal = ({ isOpen, onClose, subjectId, onGameCreated, editGame
   // Populate form when editing
   useEffect(() => {
     if (isEditMode && editGame) {
+      console.log('🔍 Loading edit game data:', editGame);
+      
+      // Helper function to safely handle arrays (could be text[] or jsonb)
+      const parseArray = (data) => {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if (typeof data === 'string') {
+          try {
+            return JSON.parse(data);
+          } catch (e) {
+            console.error('Failed to parse array:', data, e);
+            return [];
+          }
+        }
+        // Handle jsonb objects that might be passed as objects
+        if (typeof data === 'object' && data !== null) {
+          // If it's already an object, it might be jsonb parsed by Supabase
+          return Array.isArray(data) ? data : [];
+        }
+        return [];
+      };
+
+      // Helper function to safely parse jsonb objects
+      const parseJsonbObject = (data) => {
+        if (!data) return {};
+        if (typeof data === 'object' && !Array.isArray(data)) return data;
+        if (typeof data === 'string') {
+          try {
+            return JSON.parse(data);
+          } catch (e) {
+            console.error('Failed to parse jsonb object:', data, e);
+            return {};
+          }
+        }
+        return {};
+      };
+
+      const mitosisDescriptions = parseArray(editGame.mitosis_descriptions);
+      const mitosisStageImages = parseArray(editGame.mitosis_stage_images);
+      const mitosisCorrectMatches = parseJsonbObject(editGame.mitosis_correct_matches);
+      
+      console.log('🔍 Parsed mitosis data:', {
+        descriptions: mitosisDescriptions,
+        stageImages: mitosisStageImages,
+        correctMatches: mitosisCorrectMatches
+      });
+
+      // Add more detailed logging
+      console.log('🔍 Raw editGame.mitosis_descriptions:', editGame.mitosis_descriptions);
+      console.log('🔍 Raw editGame.mitosis_stage_images:', editGame.mitosis_stage_images);
+      console.log('🔍 Raw editGame.mitosis_correct_matches:', editGame.mitosis_correct_matches);
+      console.log('🔍 Type of mitosis_descriptions:', typeof editGame.mitosis_descriptions);
+      console.log('🔍 Is Array?', Array.isArray(editGame.mitosis_descriptions));
+
       setGameData({
         title: editGame.title || '',
         description: editGame.description || '',
@@ -139,29 +193,29 @@ const GameCreationModal = ({ isOpen, onClose, subjectId, onGameCreated, editGame
         imageFile: null,
         imagePreview: editGame.image_url || null,
         question: editGame.question || '',
-        multipleChoiceOptions: editGame.multiple_choice_options || ['', ''],
+        multipleChoiceOptions: parseArray(editGame.multiple_choice_options) || ['', ''],
         correctAnswerIndex: editGame.correct_answer_index || 0,
         // Puzzle 2
         imageFile2: null,
         imagePreview2: editGame.image_url_2 || null,
         question2: editGame.question_2 || '',
-        multipleChoiceOptions2: editGame.multiple_choice_options_2 || ['', ''],
+        multipleChoiceOptions2: parseArray(editGame.multiple_choice_options_2) || ['', ''],
         correctAnswerIndex2: editGame.correct_answer_index_2 || 0,
         // Single Image Question
         singleImageFile: null,
         singleImagePreview: editGame.single_image_url || null,
         singleQuestion: editGame.single_question || '',
-        singleQuestionOptions: editGame.single_question_options || ['', ''],
+        singleQuestionOptions: parseArray(editGame.single_question_options) || ['', ''],
         singleQuestionCorrectAnswer: editGame.single_question_correct_answer || '',
-        // Mitosis Sorting Game (patch: always default to [] or {})
-        mitosisStageImages: editGame.mitosis_stage_images || [],
-        mitosisDescriptions: editGame.mitosis_descriptions || [],
-        mitosisCorrectMatches: editGame.mitosis_correct_matches || {},
+        // Mitosis Sorting Game
+        mitosisStageImages: mitosisStageImages,
+        mitosisDescriptions: mitosisDescriptions,
+        mitosisCorrectMatches: mitosisCorrectMatches,
         // Timeline Game
-        timelineImages: editGame.timeline_images || [],
-        timelineCorrectOrder: editGame.timeline_correct_order || [1, 2, 3, 4, 5],
+        timelineImages: parseArray(editGame.timeline_images) || [],
+        timelineCorrectOrder: parseArray(editGame.timeline_correct_order) || [1, 2, 3, 4, 5],
         // Meiosis Fill-in-the-Blanks Game
-        meiosisFillBlankQuestions: editGame.meiosis_fill_blank_questions || [
+        meiosisFillBlankQuestions: parseArray(editGame.meiosis_fill_blank_questions) || [
           {
             id: 1,
             question: "Meiosis ensures genetic ________ (diversity/duplication).",
@@ -213,135 +267,6 @@ const GameCreationModal = ({ isOpen, onClose, subjectId, onGameCreated, editGame
           },
           {
             id: 8,
-            question: "Meiosis occurs in two stages, ________ (Mitosis I/Meiosis I) and ________ (Mitosis II/Meiosis II), to reduce the chromosome number by half.",
-            options: ["Meiosis I", "Meiosis II"],
-            correct_answer: ["Meiosis I", "Meiosis II"],
-            explanation: "Meiosis I and Meiosis II are the two stages of meiosis, occurring in that specific order."
-          },
-          {
-            id: 9,
-            question: "Meiosis contributes to evolution by creating genetic ________     (stability/variation) through processes like crossing-over and independent assortment, leading to different combinations of genes.",
-            options: ["stability", "variation"],
-            correct_answer: "variation",
-            explanation: "Meiosis creates genetic variation through crossing-over and independent assortment."
-          }
-        ],
-        // Teacher Fill-in-the-Blanks Game
-        teacherFillBlanksQuestions: editGame.teacher_fill_blanks_questions || [],
-        teacherFillBlanksImages: editGame.teacher_fill_blanks_images || [],
-        teacherFillBlanksCorrectAnswers: editGame.teacher_fill_blanks_correct_answers || [],
-        // Shared
-        wordAnswer: editGame.word_answer || '',
-        vocabularyTerms: (() => {
-          const existingTerms = editGame.vocabulary_terms || [];
-          const defaultTerms = [
-            { term: '', definition: '' },
-            { term: '', definition: '' },
-            { term: '', definition: '' },
-            { term: '', definition: '' },
-            { term: '', definition: '' },
-            { term: '', definition: '' },
-            { term: '', definition: '' },
-            { term: '', definition: '' },
-            { term: '', definition: '' }
-          ];
-          // Ensure we always have 9 pairs, filling empty ones with defaults
-          return defaultTerms.map((defaultTerm, index) => 
-            existingTerms[index] || defaultTerm
-          );
-        })(),
-        instructions: editGame.instructions || 'Complete both puzzles, answer the questions, then match vocabulary terms!'
-      });
-      // Populate mitosis cards if editing a mitosis card game
-      // Check for both possible game type values and mitosis cards data
-      if ((editGame.game_type === 'mitosis_card' || editGame.game_type === 'mitosis_cards') || editGame.mitosis_cards) {
-        console.log('Loading mitosis cards:', editGame.mitosis_cards);
-        setMitosisCards(editGame.mitosis_cards || []);
-      }
-    } else {
-      // Reset form for create mode
-      setGameData({
-        title: '',
-        description: '',
-        gameType: 'puzzle',
-        // Puzzle 1
-        imageFile: null,
-        imagePreview: null,
-        question: '',
-        multipleChoiceOptions: ['', ''],
-        correctAnswerIndex: 0,
-        // Puzzle 2
-        imageFile2: null,
-        imagePreview2: null,
-        question2: '',
-        multipleChoiceOptions2: ['', ''],
-        correctAnswerIndex2: 0,
-        // Single Image Question
-        singleImageFile: null,
-        singleImagePreview: null,
-        singleQuestion: '',
-        singleQuestionOptions: ['', ''],
-        singleQuestionCorrectAnswer: '',
-        // Mitosis Sorting Game
-        mitosisStageImages: [],
-        mitosisDescriptions: [],
-        mitosisCorrectMatches: {},
-        // Timeline Game
-        timelineImages: [],
-        timelineCorrectOrder: [1, 2, 3, 4, 5],
-        // Meiosis Fill-in-the-Blanks Game
-        meiosisFillBlankQuestions: [
-          {
-            id: 1,
-            question: "Meiosis ensures genetic ___ (diversity/duplication).",
-            options: ["diversity", "duplication"],
-            correct_answer: "diversity",
-            explanation: "Meiosis creates genetic diversity through crossing-over and independent assortment."
-          },
-          {
-            id: 2,
-            question: "Meiosis creates ___ (haploid/diploid) cells, which are essential for sexual reproduction.",
-            options: ["haploid", "diploid"],
-            correct_answer: "haploid",
-            explanation: "Meiosis reduces the chromosome number by half, creating haploid cells."
-          },
-          {
-            id: 3,
-            question: "The reduction in chromosome number during meiosis is crucial for ___ (maintaining/growing) the chromosome number of offspring.",
-            options: ["maintaining", "growing"],
-            correct_answer: "maintaining",
-            explanation: "Meiosis maintains the chromosome number across generations by reducing it before fertilization."
-          },
-          {
-            id: 4,
-            question: "Meiosis leads to the production of genetically ___ (identical/unique) offspring.",
-            options: ["identical", "unique"],
-            correct_answer: "unique",
-            explanation: "Meiosis produces genetically unique offspring through genetic recombination."
-          },
-          {
-            id: 5,
-            question: "Meiosis occurs in ___ (somatic/sex) cells.",
-            options: ["somatic", "sex"],
-            correct_answer: "sex",
-            explanation: "Meiosis occurs in sex cells (gametes) to produce reproductive cells."
-          },
-          {
-            id: 6,
-            question: "Meiosis ensures that the chromosome number remains ___ (constant/variable) across generations.",
-            options: ["constant", "variable"],
-            correct_answer: "constant",
-            explanation: "Meiosis maintains a constant chromosome number across generations."
-          },
-          {
-            id: 7,
-            question: "___ (Fertilization/Division) restores the diploid number of chromosomes after meiosis.",
-            options: ["Fertilization", "Division"],
-            correct_answer: "Fertilization",
-            explanation: "Fertilization combines two haploid gametes to restore the diploid number."
-          },
-          {
-            id: 8,
             question: "Meiosis occurs in two stages, ______ (Mitosis I/Meiosis I) and ______ (Mitosis II/Meiosis II), to reduce the chromosome number by half.",
             options: ["Meiosis I", "Meiosis II"],
             correct_answer: ["Meiosis I", "Meiosis II"],
@@ -349,19 +274,19 @@ const GameCreationModal = ({ isOpen, onClose, subjectId, onGameCreated, editGame
           },
           {
             id: 9,
-            question: "Meiosis contributes to evolution by creating genetic ___ (stability/variation) through processes like crossing-over and independent assortment, leading to different combinations of genes.",
+            question: "Meiosis contributes to evolution by creating genetic ________ (stability/variation) through processes like crossing-over and independent assortment, leading to different combinations of genes.",
             options: ["stability", "variation"],
             correct_answer: "variation",
             explanation: "Meiosis creates genetic variation through crossing-over and independent assortment."
           }
         ],
         // Teacher Fill-in-the-Blanks Game
-        teacherFillBlanksQuestions: [],
-        teacherFillBlanksImages: [],
-        teacherFillBlanksCorrectAnswers: [],
+        teacherFillBlanksQuestions: parseArray(editGame.teacher_fill_blanks_questions) || [],
+        teacherFillBlanksImages: parseArray(editGame.teacher_fill_blanks_images) || [],
+        teacherFillBlanksCorrectAnswers: parseArray(editGame.teacher_fill_blanks_correct_answers) || [],
         // Shared
-        wordAnswer: '',
-        vocabularyTerms: [
+        wordAnswer: editGame.word_answer || '',
+        vocabularyTerms: parseArray(editGame.vocabulary_terms) || [
           { term: '', definition: '' },
           { term: '', definition: '' },
           { term: '', definition: '' },
@@ -372,16 +297,30 @@ const GameCreationModal = ({ isOpen, onClose, subjectId, onGameCreated, editGame
           { term: '', definition: '' },
           { term: '', definition: '' }
         ],
-        instructions: 'Complete both puzzles, answer the questions, then match vocabulary terms!'
+        instructions: editGame.instructions || 'Complete both puzzles, answer the questions, then match vocabulary terms!'
       });
-      // Only reset mitosisCards for new games, not when editing
-      if (!isEditMode) {
-        setMitosisCards([]);
+
+      // Load mitosis cards if they exist
+      if (editGame.mitosis_cards) {
+        const cards = parseArray(editGame.mitosis_cards);
+        console.log('Loading mitosis cards:', cards);
+        setMitosisCards(cards.map(card => ({
+          ...card,
+          imageFile: null,
+          imagePreview: card.imageUrl || null
+        })));
       }
     }
-    setCurrentStep(1);
-    setError('');
-  }, [isEditMode, editGame, isOpen]);
+  }, [isEditMode, editGame]);
+
+  // Add debugging for form rendering
+  useEffect(() => {
+    if (isEditMode) {
+      console.log('🔍 Current gameData.mitosisDescriptions:', gameData.mitosisDescriptions);
+      console.log('🔍 Current gameData.mitosisStageImages:', gameData.mitosisStageImages);
+      console.log('🔍 Current gameData.mitosisCorrectMatches:', gameData.mitosisCorrectMatches);
+    }
+  }, [gameData.mitosisDescriptions, gameData.mitosisStageImages, gameData.mitosisCorrectMatches, isEditMode]);
 
   const handleImageUpload = (e, puzzleNumber = 1) => {
     const file = e.target.files[0];
@@ -735,15 +674,15 @@ const GameCreationModal = ({ isOpen, onClose, subjectId, onGameCreated, editGame
 
       // Upload new image 1 if provided
       if (gameData.imageFile) {
-        const { data: imageData1, error: uploadError1 } = await uploadImage(gameData.imageFile, 'puzzle-images');
-        if (uploadError1) throw uploadError1;
+      const { data: imageData1, error: uploadError1 } = await uploadImage(gameData.imageFile, 'puzzle-images');
+      if (uploadError1) throw uploadError1;
         imageUrl1 = imageData1.publicUrl;
       }
-
+      
       // Upload new image 2 if provided
       if (gameData.imageFile2) {
-        const { data: imageData2, error: uploadError2 } = await uploadImage(gameData.imageFile2, 'puzzle-images');
-        if (uploadError2) throw uploadError2;
+      const { data: imageData2, error: uploadError2 } = await uploadImage(gameData.imageFile2, 'puzzle-images');
+      if (uploadError2) throw uploadError2;
         imageUrl2 = imageData2.publicUrl;
       }
 
@@ -1376,12 +1315,13 @@ const GameCreationModal = ({ isOpen, onClose, subjectId, onGameCreated, editGame
               <div className="form-group">
                 <label>Descriptions to Drag</label>
                 <div className="descriptions-container">
+                  {console.log('🔍 Rendering mitosis descriptions:', gameData.mitosisDescriptions)}
                   {(gameData.mitosisDescriptions || []).map((description, index) => (
                     <div key={index} className="description-item">
                       <div className="description-input">
                         <input
                           type="text"
-                          value={description}
+                          value={description || ''}
                           onChange={(e) => handleMitosisDescriptionChange(index, e.target.value)}
                           placeholder={`Description ${index + 1} (e.g., "Chromosomes align at equator")`}
                           required

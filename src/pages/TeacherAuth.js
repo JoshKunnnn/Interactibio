@@ -41,18 +41,24 @@ const TeacherAuth = () => {
           
           // Copy Cell Division template for the new teacher
           if (teacherData && teacherData[0]) {
+            console.log('Attempting to copy template for teacher:', teacherData[0].id);
             try {
               const { data: templateData, error: templateError } = await copyCellDivisionTemplateForTeacher(teacherData[0].id);
               if (templateError) {
                 console.error('Error copying template:', templateError);
-                // Don't throw error - template copying is optional
+                console.error('Template error details:', templateError.message);
+                // Template copying failed but account creation continues
               } else {
-                console.log('Cell Division template copied successfully for new teacher');
+                console.log('✅ Cell Division template copied successfully for new teacher');
+                console.log('Template result:', templateData);
               }
             } catch (templateError) {
-              console.error('Error copying template:', templateError);
-              // Don't throw error - template copying is optional
+              console.error('❌ Exception copying template:', templateError);
+              console.error('Template exception details:', templateError.message);
+              // Template copying failed but account creation continues
             }
+          } else {
+            console.error('No teacher data available for template copying');
           }
         }
         

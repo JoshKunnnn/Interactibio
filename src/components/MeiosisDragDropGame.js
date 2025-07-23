@@ -12,14 +12,14 @@ const MeiosisDragDropGame = ({ gameData, onGameComplete }) => {
 
   // Updated descriptions to match the 8 green boxes exactly
   const descriptions = [
-    "Crossing over occurs. Spindle fibers start to reach out to centromeres of homologous chromosomes.",
-    "Homologous chromosomes line up at the equator.",
-    "Homologous chromosomes are pulled apart to opposite poles of the cell.",
-    "Cytoplasm divides amongst daughter cells. Two daughter cells are created.",
-    "Spindle fibers start to reach out to centromeres of sister chromatids.",
-    "Sister chromatids line up along the equator.",
-    "Sister chromatids separate. Sister chromatids move to opposite poles.",
-    "Daughter cells divide, forming 4 haploid cells."
+    "Chromosomes swap parts. Spindle fibers connect to chromosome centers (or centromeres).",
+    "Homologous chromosomes line up in the middle.",
+    "Homologous chromosomes are pulled to opposite sides.",
+    "Cell splits its cytoplasm. Two new cells form.",
+    "Spindle fibers attach to the center (or centromeres) of sister chromatids.",
+    "Sister chromatids line up in the middle.",
+    "Sister chromatids split and move to opposite sides.",
+    "Cells divide again, making 4 haploid cells."
   ];
 
   // Drop zones with their correct answers (matching the 8 green boxes)
@@ -240,6 +240,9 @@ const MeiosisDragDropGame = ({ gameData, onGameComplete }) => {
       )}
       <h2>Map the Meiosis Mission!</h2>
       <p>Click the descriptions below to place them in the correct stages of meiosis on the diagram.</p>
+      <div className="puzzle-direction-text">
+        <p><strong>Direction:</strong> Summarize the stages that occur during meiosis and understand how cells divide to form sex cells through dragging and dropping each stage description to the correct spot in the meiosis picture to complete the process.</p>
+      </div>
       
       <div className="game-container">
         {/* Diagram Section */}

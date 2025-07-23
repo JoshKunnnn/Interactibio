@@ -373,7 +373,7 @@ function MeiosisFillBlankGame({ questions, onComplete }) {
               return (
                 <div key={question.id} className="meiosis-review-question">
                   <div className="question-text">
-                    <strong>{question.id}.</strong> {question.question.replace(/___/g, () => {
+                    <strong>{question.id}.</strong> {(question.question || '').replace(/___/g, () => {
                       if (Array.isArray(question.correct_answer)) {
                         // For multiple blanks, insert each answer in order
                         const studentAnswers = answers[question.id] || {};
@@ -565,8 +565,6 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
   const imageRef2 = useRef(null);
   const hasCalledOnGameComplete = useRef(false);
 
-
-
   // Initialize puzzle pieces when game starts
   useEffect(() => {
     if (gameData && (gameState === 'puzzle1' || gameState === 'puzzle2')) {
@@ -581,6 +579,72 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
       callOnGameComplete();
     }
   }, [gameState]);
+
+  // Keyboard shortcut for debug mode (Ctrl+D)
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        toggleDebugMode();
+      }
+      if (debugMode && e.key === 's' && !e.ctrlKey) {
+        e.preventDefault();
+        skipToNextStage();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [debugMode, gameState, score]);
+
+  // Monitor gameState changes
+  useEffect(() => {
+    console.log('🔍 gameState changed to:', gameState);
+  }, [gameState]);
+
+  // Add null check to prevent errors
+  if (!gameData) {
+    return (
+      <div className="puzzle-game-player">
+        <div className="game-header">
+          <h2>Biology Quiz Game</h2>
+          <div className="header-right">
+            <div className="game-score">Score: {score}</div>
+            <button 
+              onClick={onQuitGame}
+              className="quit-btn"
+              title="Quit Game"
+            >
+              ❌ Quit
+            </button>
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', padding: '50px', color: '#666' }}>
+          <h3>Loading game data...</h3>
+          <p>Please wait while the game loads.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Ensure all arrays exist to prevent null reference errors
+  const safeMultipleChoiceOptions = gameData.multiple_choice_options || [];
+  const safeMultipleChoiceOptions2 = gameData.multiple_choice_options_2 || [];
+  const safeMitosisStageImages = gameData.mitosis_stage_images || [];
+  const safeMitosisDescriptions = gameData.mitosis_descriptions || [];
+  const safeTimelineImages = gameData.timeline_images || [];
+  const safeSingleQuestionOptions = (gameData.single_question_options && Array.isArray(gameData.single_question_options)) 
+    ? gameData.single_question_options 
+    : ['MITOSIS', 'MEIOSIS'];
+  const safeMitosisCards = gameData.mitosis_cards || [];
+  const safeVocabularyTerms = gameData.vocabulary_terms || [
+    { term: "MITOSIS", definition: "Divides a eukaryotic cell's chromosome into identical daughter nuclei." },
+    { term: "CYTOKINESIS", definition: "Distribution of cytoplasm to daughter cells following division of a cell's chromosomes." },
+    { term: "CENTROSOME", definition: "Structure that organizes the microtubules that make up the spindle in animal cells." },
+    { term: "SPINDLE", definition: "Array of microtubule proteins that move chromosomes during mitosis and meiosis." },
+    { term: "MEIOSIS", definition: "Forms genetically variable nuclei, each containing half as many chromosomes as the organism's diploid cells." },
+    { term: "HOMOLOGOUS PAIR", definition: "Two chromosomes that have the same gene sequence but may have different alleles of those genes." }
+  ];
 
   const initializePuzzle = () => {
     // Create 16 pieces (4x4 grid) with their image data
@@ -713,28 +777,6 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
     }
   };
 
-  // Keyboard shortcut for debug mode (Ctrl+D)
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.ctrlKey && e.key === 'd') {
-        e.preventDefault();
-        toggleDebugMode();
-      }
-      if (debugMode && e.key === 's' && !e.ctrlKey) {
-        e.preventDefault();
-        skipToNextStage();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [debugMode, gameState, score]);
-
-  // Monitor gameState changes
-  useEffect(() => {
-    console.log('🔍 gameState changed to:', gameState);
-  }, [gameState]);
-
   // Combined Question handlers
   const handleCombinedDragStart = (e, option) => {
     setDraggedCombinedOption(option);
@@ -784,7 +826,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
   };
 
   const continueFromSingleImageReview = () => {
-    setGameState('vocabulary');
+    setGameState('vocabulary_learning_screen');
   };
 
   const continueFromVocabulary = () => {
@@ -1091,8 +1133,8 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
     meiosisQuestions.forEach(q => {
       const studentAnswer = meiosisAnswers[q.id];
       if (Array.isArray(q.correct_answer)) {
-        if (Array.isArray(studentAnswer) || typeof studentAnswer === 'object') {
-          const arr = Array.isArray(studentAnswer) ? studentAnswer : [studentAnswer[0], studentAnswer[1]];
+        if (Array.isArray(studentAnswer) || (studentAnswer && typeof studentAnswer === 'object')) {
+          const arr = Array.isArray(studentAnswer) ? studentAnswer : [(studentAnswer && studentAnswer[0]) || '', (studentAnswer && studentAnswer[1]) || ''];
           if (q.correct_answer.every((ans, idx) => arr[idx] === ans)) {
             finalScore += 2;
           }
@@ -1212,8 +1254,8 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
       questions.forEach(q => {
         const studentAnswer = meiosisAnswers[q.id];
         if (Array.isArray(q.correct_answer)) {
-          if (Array.isArray(studentAnswer) || typeof studentAnswer === 'object') {
-            const arr = Array.isArray(studentAnswer) ? studentAnswer : [studentAnswer[0], studentAnswer[1]];
+          if (Array.isArray(studentAnswer) || (studentAnswer && typeof studentAnswer === 'object')) {
+            const arr = Array.isArray(studentAnswer) ? studentAnswer : [(studentAnswer && studentAnswer[0]) || '', (studentAnswer && studentAnswer[1]) || ''];
             if (q.correct_answer.every((ans, idx) => arr[idx] === ans)) {
               correctAnswers++;
             }
@@ -1285,19 +1327,19 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
     
     // Call onGameComplete with complete final data
     if (onGameComplete) {
-      onGameComplete({
-        score: finalScore,
+    onGameComplete({
+      score: finalScore,
         timeTaken: timeTaken,
-        completed: true,
+      completed: true,
         
         // Individual game correctness
-        question1Correct: selectedAnswer === gameData.correct_answer_index,
-        question2Correct: selectedAnswer2 === gameData.correct_answer_index_2,
+      question1Correct: selectedAnswer === gameData.correct_answer_index,
+      question2Correct: selectedAnswer2 === gameData.correct_answer_index_2,
         combinedQuestionCorrect: combinedAnswer === 'MITOSIS',
         singleImageQuestionCorrect: singleImageAnswer === gameData.single_question_correct_answer,
         mitosisCorrectMatches: mitosisSortingScore,
         timelineCorrectPositions: timelineGameScore / 2, // Convert back to count
-        vocabularyCompleted: true,
+      vocabularyCompleted: true,
         totalPuzzles: 2,
         
         // Individual game scores
@@ -1435,6 +1477,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
         <h2>Biology Quiz Game</h2>
         <div className="header-right">
           <div className="game-score">Score: {score}</div>
+          {/* Debug button removed, logic remains */}
           <button 
             onClick={onQuitGame}
             className="quit-btn"
@@ -1442,18 +1485,235 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
           >
             ❌ Quit
           </button>
-
         </div>
       </div>
 
-
+      {/* Debug Panel */}
+      {debugMode && (
+        <div className="debug-panel">
+          <div className="debug-info">
+            <span>🎮 Current State: {gameState}</span>
+            <span>📊 Score: {score}</span>
+            <span>⏱️ Time: {Math.floor((Date.now() - startTime) / 1000)}s</span>
+          </div>
+          
+          <div className="debug-controls">
+            <button onClick={toggleDebugDropdownMode} className="dropdown-btn">
+              {debugDropdownMode ? 'Hide' : 'Show'} Game Selector
+            </button>
+          <button onClick={skipToNextStage} className="skip-btn">
+              ⏭️ Skip Stage (S)
+          </button>
+          </div>
+          
+          {debugDropdownMode && (
+            <div className="debug-dropdown">
+              <h4>Jump to Game State:</h4>
+              <div className="game-options">
+                <button 
+                  className={`game-option ${selectedDebugGame === 'learning_screen' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('learning_screen')}
+                >
+                  📚 Learning Screen
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'puzzle1' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('puzzle1')}
+                >
+                  🧩 Puzzle 1
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'question1' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('question1')}
+                >
+                  ❓ Question 1
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'question1_review' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('question1_review')}
+                >
+                  📝 Question 1 Review
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'puzzle2' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('puzzle2')}
+                >
+                  🧩 Puzzle 2
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'question2' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('question2')}
+                >
+                  ❓ Question 2
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'question2_review' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('question2_review')}
+                >
+                  📝 Question 2 Review
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'combined_question' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('combined_question')}
+                >
+                  🔗 Combined Question
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'combined_review' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('combined_review')}
+                >
+                  📝 Combined Review
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'single_image_question' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('single_image_question')}
+                >
+                  🖼️ Single Image Question
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'single_image_review' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('single_image_review')}
+                >
+                  📝 Single Image Review
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'vocabulary' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('vocabulary')}
+                >
+                  📚 Vocabulary
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'mitosis_learning_screen' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('mitosis_learning_screen')}
+                >
+                  📚 Mitosis Learning
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'mitosis_sorting' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('mitosis_sorting')}
+                >
+                  🔄 Mitosis Sorting
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'mitosis_review' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('mitosis_review')}
+                >
+                  📝 Mitosis Review
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'timeline_learning_screen' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('timeline_learning_screen')}
+                >
+                  📚 Timeline Learning
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'timeline_game' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('timeline_game')}
+                >
+                  ⏰ Timeline Game
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'timeline_review' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('timeline_review')}
+                >
+                  📝 Timeline Review
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'mitosis_card_learning_screen' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('mitosis_card_learning_screen')}
+                >
+                  📚 Mitosis Card Learning
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'mitosis_card_game' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('mitosis_card_game')}
+                >
+                  🃏 Mitosis Card Game
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'meiosis_learning_screen' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('meiosis_learning_screen')}
+                >
+                  📚 Meiosis Learning
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'meiosis_fill_blank' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('meiosis_fill_blank')}
+                >
+                  ✏️ Meiosis Fill Blanks
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'meiosis_fill_blank_review' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('meiosis_fill_blank_review')}
+                >
+                  📝 Meiosis Fill Blanks Review
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'meiosis_drag_drop_learning_screen' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('meiosis_drag_drop_learning_screen')}
+                >
+                  📚 Meiosis Drag Drop Learning
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'meiosis_drag_drop' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('meiosis_drag_drop')}
+                >
+                  🔄 Meiosis Drag Drop
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'meiosis_drag_drop_review' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('meiosis_drag_drop_review')}
+                >
+                  📝 Meiosis Drag Drop Review
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'venn_diagram_learning_screen' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('venn_diagram_learning_screen')}
+                >
+                  📚 Venn Diagram Learning
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'venn_diagram' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('venn_diagram')}
+                >
+                  🔗 Venn Diagram
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'venn_diagram_review' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('venn_diagram_review')}
+                >
+                  📝 Venn Diagram Review
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'teacher_fill_blanks_learning_screen' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('teacher_fill_blanks_learning_screen')}
+                >
+                  📚 Teacher Fill Blanks Learning
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'teacher_fill_blanks' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('teacher_fill_blanks')}
+                >
+                  📝 Teacher Fill Blanks
+                </button>
+                <button 
+                  className={`game-option ${selectedDebugGame === 'game_complete' ? 'selected' : ''}`}
+                  onClick={() => selectDebugGame('game_complete')}
+                >
+                  🎉 Game Complete
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {gameState === 'learning_screen' && (
         <div className="learning-screen">
           <div className="learning-container">
             <div className="learning-image-container">
               <img 
-                src="/images/learning1.png" 
+                src="/images/learnin1.png" 
                 alt="Learning Instructions" 
                 className="learning-image"
                 style={{
@@ -1464,7 +1724,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                   objectFit: 'contain'
                 }}
               />
-            </div>
+          </div>
             <div className="learning-actions">
               <button 
                 onClick={() => setGameState('puzzle1')}
@@ -1485,7 +1745,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                 onMouseOut={(e) => e.target.style.backgroundColor = '#04796b'}
               >
                 Start Puzzle
-              </button>
+          </button>
             </div>
           </div>
         </div>
@@ -1496,6 +1756,13 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
           <div className="stage-instructions">
             <h3>🧩 {gameState === 'puzzle1' ? 'Complete Puzzle 1' : 'Complete Puzzle 2'}</h3>
             <p>Drag pieces from the left into the correct positions to match the reference image!</p>
+            {(gameState === 'puzzle1' || gameState === 'puzzle2') && (
+              <div className="puzzle-direction-text">
+                <p><strong>Direction for puzzle:</strong> In this interactive puzzle, you will be presented with images that need to be completed. After finishing the puzzle, identify whether the image depicts growth or repair. Use your knowledge of cell division to make the right choice!</p>
+                <p><strong>Direction for choosing growth or repair:</strong> Choose the right word which depicts the completed puzzle image.</p>
+                <p><em>💡 After completing the puzzle, you'll be asked a question about whether this image represents growth or repair.</em></p>
+              </div>
+            )}
           </div>
           
           <div className="puzzle-game-container">
@@ -1618,7 +1885,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
           <div className="question-container">
             <h4>{gameState === 'question1' ? gameData.question : gameData.question_2}</h4>
             <div className="answer-options">
-              {(gameState === 'question1' ? gameData.multiple_choice_options : gameData.multiple_choice_options_2)?.map((option, index) => (
+              {(gameState === 'question1' ? safeMultipleChoiceOptions : safeMultipleChoiceOptions2).map((option, index) => (
                 <React.Fragment key={index}>
                   <button
                     className={`answer-option ${(gameState === 'question1' ? selectedAnswer : selectedAnswer2) === index ? 'selected' : ''}`}
@@ -1835,6 +2102,9 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
           <div className="stage-instructions">
             <h3>🔬 Combined Analysis Question</h3>
             <p>Based on both images you completed, drag the correct answer to complete the sentence:</p>
+            <div className="puzzle-direction-text">
+              <p><strong>Direction:</strong> Based on the two images you completed, complete the sentence below. Choose the correct answer, drag and drop it to the space provided.</p>
+            </div>
           </div>
           
           <div className="combined-question-container">
@@ -1915,6 +2185,9 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
           <div className="stage-instructions">
             <h3>📸 Single Image Question</h3>
             <p>Choose an answer from below, then drag it to complete the sentence:</p>
+            <div className="puzzle-direction-text">
+              <p><strong>Direction:</strong> Based on the image provided, complete the sentence below. Choose the correct answer, drag and drop it to the space provided.</p>
+            </div>
           </div>
           
           <div className="single-image-question-container">
@@ -1931,7 +2204,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
             <div className="single-question-text">
               {/* Draggable answer options - moved to top */}
               <div className="single-answer-options">
-                {(gameData.single_question_options || ['MITOSIS', 'MEIOSIS']).map((option, index) => (
+                {safeSingleQuestionOptions.map((option, index) => (
                   <div
                     key={index}
                     className={`draggable-option ${singleImageAnswer === option ? 'used' : ''}`}
@@ -1954,7 +2227,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                   >
                     {singleImageAnswer || 'Drop answer here'}
                   </div>
-                  <span className="question-text">{gameData.single_question.replace(/^_+/, '').trim()}</span>
+                  <span className="question-text">{(gameData.single_question || '').replace(/^_+/, '').trim()}</span>
                 </div>
               </div>
               
@@ -2007,23 +2280,59 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
             </div>
           </div>
           
-          <button onClick={continueFromSingleImageReview} className="continue-btn">
+          <button onClick={() => setGameState('vocabulary_learning_screen')} className="continue-btn">
             Continue to Vocabulary →
           </button>
+        </div>
+      )}
+
+      {gameState === 'vocabulary_learning_screen' && (
+        <div className="learning-screen">
+          <div className="learning-container">
+            <div className="learning-image-container">
+              <img 
+                src="/images/6.png" 
+                alt="Vocabulary Learning Instructions" 
+                className="learning-image"
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  maxWidth: '100vw',
+                  maxHeight: '100vh',
+                  objectFit: 'contain'
+                }}
+              />
+            </div>
+            <div className="learning-actions">
+              <button 
+                onClick={() => setGameState('vocabulary')}
+                className="start-puzzle-btn"
+                style={{
+                  padding: '16px 32px',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  backgroundColor: '#04796b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s ease',
+                  marginTop: '20px'
+                }}
+                onMouseOver={(e) => e.target.style.backgroundColor = '#036c5f'}
+                onMouseOut={(e) => e.target.style.backgroundColor = '#04796b'}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {gameState === 'vocabulary' && (
         <div className="vocabulary-stage">
           <VocabularyMatchingGame 
-            vocabularyData={gameData.vocabulary_terms || [
-              { term: "MITOSIS", definition: "Divides a eukaryotic cell's chromosome into identical daughter nuclei." },
-              { term: "CYTOKINESIS", definition: "Distribution of cytoplasm to daughter cells following division of a cell's chromosomes." },
-              { term: "CENTROSOME", definition: "Structure that organizes the microtubules that make up the spindle in animal cells." },
-              { term: "SPINDLE", definition: "Array of microtubule proteins that move chromosomes during mitosis and meiosis." },
-              { term: "MEIOSIS", definition: "Forms genetically variable nuclei, each containing half as many chromosomes as the organism's diploid cells." },
-              { term: "HOMOLOGOUS PAIR", definition: "Two chromosomes that have the same gene sequence but may have different alleles of those genes." }
-            ]}
+            vocabularyData={safeVocabularyTerms}
             onComplete={handleVocabularyComplete}
           />
         </div>
@@ -2077,6 +2386,9 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
           <div className="stage-instructions">
             <h3>The Mitosis Sorting Game: Can You Place the Stages Correctly?</h3>
             <p>Drag the descriptions below to match them with the correct mitosis stages. You can place multiple descriptions in each stage box.</p>
+            <div className="puzzle-direction-text">
+              <p><strong>Direction:</strong> Match the descriptions of the stages of mitosis to the correct phase by dragging and dropping them into the boxes. Pay attention to the images and what happens in each stage. You can place multiple descriptions in each stage box. By the end, you'll understand how cells divide step by step and what happens in each phase.</p>
+              </div>
           </div>
           
           <div className="mitosis-sorting-container">
@@ -2086,7 +2398,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                 <div key={stageIndex} className="mitosis-stage-box">
                   <div className="stage-image-container">
                     <img 
-                      src={gameData.mitosis_stage_images[stageIndex]} 
+                      src={safeMitosisStageImages[stageIndex] || ''} 
                       alt={``}
                       className="stage-image"
                     />
@@ -2101,7 +2413,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                     {/* Show descriptions placed in this stage */}
                     {Object.keys(mitosisMatches).map(descriptionIndex => {
                       if (mitosisMatches[descriptionIndex] === stageIndex) {
-                        const description = gameData.mitosis_descriptions[descriptionIndex];
+                        const description = safeMitosisDescriptions[descriptionIndex] || '';
                         return (
                           <div 
                             key={descriptionIndex} 
@@ -2127,7 +2439,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
             <div className="descriptions-area">
               <h4>Descriptions to Drag:</h4>
               <div className="descriptions-list">
-                {(gameData.mitosis_descriptions || []).map((description, index) => {
+                {safeMitosisDescriptions.map((description, index) => {
                   // Only show descriptions that haven't been placed yet
                   if (mitosisMatches[index] === undefined) {
                     return (
@@ -2148,7 +2460,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
             </div>
 
             {/* Submit button - only show when all descriptions are placed */}
-            {Object.keys(mitosisMatches).length === (gameData.mitosis_descriptions || []).length && (
+            {Object.keys(mitosisMatches).length === safeMitosisDescriptions.length && (
               <div className="mitosis-submit-area">
                 <button 
                   className="submit-mitosis-btn"
@@ -2191,7 +2503,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                 <div key={stageIndex} className="review-stage-box">
                   <div className="review-stage-image">
                     <img 
-                      src={gameData.mitosis_stage_images[stageIndex]} 
+                      src={safeMitosisStageImages[stageIndex] || ''} 
                       alt={``}
                     />
                   </div>
@@ -2199,8 +2511,8 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                   <div className="review-descriptions">
                     {Object.keys(mitosisMatches).map(descriptionIndex => {
                       if (mitosisMatches[descriptionIndex] === stageIndex) {
-                        const description = gameData.mitosis_descriptions[descriptionIndex];
-                        const isCorrect = gameData.mitosis_correct_matches[descriptionIndex] === stageIndex;
+                        const description = safeMitosisDescriptions[descriptionIndex] || '';
+                        const isCorrect = (gameData.mitosis_correct_matches && gameData.mitosis_correct_matches[descriptionIndex]) === stageIndex;
                         return (
                           <div 
                             key={descriptionIndex} 
@@ -2209,13 +2521,13 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                             {description}
                             <span className="feedback-icon">
                               {isCorrect ? '✅' : '❌'}
-                            </span>
-                          </div>
+                </span>
+              </div>
                         );
                       }
                       return null;
                     })}
-                  </div>
+              </div>
                 </div>
               ))}
             </div>
@@ -2275,6 +2587,9 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
           <div className="stage-instructions">
             <h3>The Mitosis Shuffle: Put the Stages in Order</h3>
             <p>Drag the images below into the correct chronological order on the timeline. You can reorder or remove images as needed.</p>
+            <div className="puzzle-direction-text">
+              <p><strong>Direction:</strong> Now that you have described the different stages of mitosis, it's time to put them in order. Look at the diagrams provided, and drag and drop them onto the timeline according to the correct sequence. What comes first? Arrange the stages from start to finish!</p>
+            </div>
           </div>
           
           <div className="timeline-game-container">
@@ -2297,7 +2612,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                     >
                       {timelineSlots[slotIndex] !== null && (
                         <img 
-                          src={gameData.timeline_images[timelineSlots[slotIndex]]} 
+                          src={safeTimelineImages[timelineSlots[slotIndex]] || ''} 
                           alt="Timeline image"
                           className="timeline-slot-image-redesigned"
                         />
@@ -2322,7 +2637,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                 <p>Drag these images to the timeline above</p>
               </div>
               <div className="timeline-images-showcase-redesigned">
-                {(gameData.timeline_images || []).map((imageUrl, imageIndex) => {
+                {safeTimelineImages.map((imageUrl, imageIndex) => {
                   // Only show images that haven't been placed yet
                   if (!timelineSlots.includes(imageIndex)) {
                     return (
@@ -2342,7 +2657,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                   }
                   return null;
                 })}
-                {(gameData.timeline_images || []).filter((_, idx) => !timelineSlots.includes(idx)).length === 0 && (
+                {safeTimelineImages.filter((_, idx) => !timelineSlots.includes(idx)).length === 0 && (
                   <div className="timeline-empty-pool">
                     <div className="empty-pool-icon">✅</div>
                     <p>All images placed!</p>
@@ -2410,7 +2725,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                     <div className="timeline-review-stage-image">
                       {studentImageIndex !== null && (
                         <img 
-                          src={gameData.timeline_images[studentImageIndex]} 
+                          src={safeTimelineImages[studentImageIndex] || ''} 
                           alt="Timeline stage"
                           className={`timeline-review-image ${isCorrect ? 'correct' : 'incorrect'}`}
                         />
@@ -2439,9 +2754,9 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
         </div>
       )}
 
-      {gameData.mitosis_cards && gameState === 'mitosis_card_game' && (
+      {safeMitosisCards.length > 0 && gameState === 'mitosis_card_game' && (
         <MitosisCardGame
-          cards={gameData.mitosis_cards}
+          cards={safeMitosisCards}
           onComplete={(score) => {
             setScore(prev => prev + score);
             setGameState('meiosis_learning_screen');
@@ -2636,6 +2951,9 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
         <>
           {console.log('🔍 About to render VennDiagramGame, gameState:', gameState)}
           {console.log('🔍 Current gameState is:', gameState)}
+          {console.log('🔍 gameData being passed to VennDiagramGame:', gameData)}
+          {console.log('🔍 venn_diagram_descriptions:', gameData?.venn_diagram_descriptions)}
+          {console.log('🔍 venn_diagram_correct_placements:', gameData?.venn_diagram_correct_placements)}
           <VennDiagramGame
             gameData={gameData}
             onGameComplete={(result) => {
@@ -2788,7 +3106,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                   // calculate it as the difference from other components
                   const question1Points = selectedAnswer === gameData.correct_answer_index ? 10 : 0;
                   const question2Points = selectedAnswer2 === gameData.correct_answer_index_2 ? 10 : 0;
-                  const combinedPoints = combinedAnswer === 'MITOSIS' ? 5 : 0;
+                    const combinedPoints = combinedAnswer === 'MITOSIS' ? 5 : 0;
                   const singleImagePoints = singleImageAnswer === gameData.single_question_correct_answer ? 5 : 0;
                   
                   // Calculate other game points
@@ -2820,8 +3138,8 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                     questions.forEach(q => {
                       const studentAnswer = meiosisAnswers[q.id];
                       if (Array.isArray(q.correct_answer)) {
-                        if (Array.isArray(studentAnswer) || typeof studentAnswer === 'object') {
-                          const arr = Array.isArray(studentAnswer) ? studentAnswer : [studentAnswer[0], studentAnswer[1]];
+                        if (Array.isArray(studentAnswer) || (studentAnswer && typeof studentAnswer === 'object')) {
+                          const arr = Array.isArray(studentAnswer) ? studentAnswer : [(studentAnswer && studentAnswer[0]) || '', (studentAnswer && studentAnswer[1]) || ''];
                           if (q.correct_answer.every((ans, idx) => arr[idx] === ans)) {
                             correctAnswers++;
                           }
@@ -2908,7 +3226,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                   });
                   return `${correctMatches} points`;
                 })()}</div>
-              </div>
+            </div>
               <div className="breakdown-item timeline-game">
                 <div className="breakdown-icon">⏰</div>
                 <div className="breakdown-text">Timeline Game</div>
@@ -2947,8 +3265,8 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
                   questions.forEach(q => {
                     const studentAnswer = meiosisAnswers[q.id];
                     if (Array.isArray(q.correct_answer)) {
-                      if (Array.isArray(studentAnswer) || typeof studentAnswer === 'object') {
-                        const arr = Array.isArray(studentAnswer) ? studentAnswer : [studentAnswer[0], studentAnswer[1]];
+                      if (Array.isArray(studentAnswer) || (studentAnswer && typeof studentAnswer === 'object')) {
+                        const arr = Array.isArray(studentAnswer) ? studentAnswer : [(studentAnswer && studentAnswer[0]) || '', (studentAnswer && studentAnswer[1]) || ''];
                         if (q.correct_answer.every((ans, idx) => arr[idx] === ans)) {
                           correctAnswers++;
                         }
@@ -3036,7 +3354,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
           <button className="home-btn" onClick={() => window.location.href = '/'}>
             🏠 Home
           </button>
-        </div>
+          </div>
         </div>
       )}
 
