@@ -239,7 +239,6 @@ const MeiosisDragDropGame = ({ gameData, onGameComplete }) => {
         </div>
       )}
       <h2>Map the Meiosis Mission!</h2>
-      <p>Click the descriptions below to place them in the correct stages of meiosis on the diagram.</p>
       <div className="puzzle-direction-text">
         <p><strong>Direction:</strong> Summarize the stages that occur during meiosis and understand how cells divide to form sex cells through dragging and dropping each stage description to the correct spot in the meiosis picture to complete the process.</p>
       </div>

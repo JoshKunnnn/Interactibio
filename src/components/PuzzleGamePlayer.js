@@ -1477,7 +1477,6 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
         <h2>Biology Quiz Game</h2>
         <div className="header-right">
           <div className="game-score">Score: {score}</div>
-          {/* Debug button removed, logic remains */}
           <button 
             onClick={onQuitGame}
             className="quit-btn"
@@ -2101,7 +2100,6 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
         <div className="combined-question-stage">
           <div className="stage-instructions">
             <h3>🔬 Combined Analysis Question</h3>
-            <p>Based on both images you completed, drag the correct answer to complete the sentence:</p>
             <div className="puzzle-direction-text">
               <p><strong>Direction:</strong> Based on the two images you completed, complete the sentence below. Choose the correct answer, drag and drop it to the space provided.</p>
             </div>
@@ -2184,7 +2182,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
         <div className="single-image-question-stage">
           <div className="stage-instructions">
             <h3>📸 Single Image Question</h3>
-            <p>Choose an answer from below, then drag it to complete the sentence:</p>
+            
             <div className="puzzle-direction-text">
               <p><strong>Direction:</strong> Based on the image provided, complete the sentence below. Choose the correct answer, drag and drop it to the space provided.</p>
             </div>
@@ -2385,7 +2383,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
         <div className="mitosis-sorting-stage">
           <div className="stage-instructions">
             <h3>The Mitosis Sorting Game: Can You Place the Stages Correctly?</h3>
-            <p>Drag the descriptions below to match them with the correct mitosis stages. You can place multiple descriptions in each stage box.</p>
+            
             <div className="puzzle-direction-text">
               <p><strong>Direction:</strong> Match the descriptions of the stages of mitosis to the correct phase by dragging and dropping them into the boxes. Pay attention to the images and what happens in each stage. You can place multiple descriptions in each stage box. By the end, you'll understand how cells divide step by step and what happens in each phase.</p>
               </div>
@@ -2586,7 +2584,7 @@ const PuzzleGamePlayer = ({ gameData, onGameComplete, onQuitGame }) => {
         <div className="timeline-game-stage">
           <div className="stage-instructions">
             <h3>The Mitosis Shuffle: Put the Stages in Order</h3>
-            <p>Drag the images below into the correct chronological order on the timeline. You can reorder or remove images as needed.</p>
+            
             <div className="puzzle-direction-text">
               <p><strong>Direction:</strong> Now that you have described the different stages of mitosis, it's time to put them in order. Look at the diagrams provided, and drag and drop them onto the timeline according to the correct sequence. What comes first? Arrange the stages from start to finish!</p>
             </div>

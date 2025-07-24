@@ -174,7 +174,6 @@ const MitosisCardGamePlayer = ({ onGameComplete, gameData, onQuitGame }) => {
         <h2>Mitosis Card Game</h2>
         <div className="header-right">
           <div className="game-score">Score: {score}</div>
-          {/* Debug button removed, logic remains */}
           {onQuitGame && (
             <button 
               onClick={onQuitGame}

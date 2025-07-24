@@ -313,7 +313,7 @@ const VennDiagramGame = ({ gameData, onGameComplete }) => {
         </div>
       )}
       <h2>Mitosis vs. Meiosis: The Great Divide!</h2>
-      <p>Use the Venn Diagram to compare and contrast mitosis and meiosis. Drag and drop the key characteristics into the correct sections.</p>
+      
       <div className="puzzle-direction-text">
         <p><strong>Direction:</strong> Use the Venn Diagram to compare and contrast mitosis and meiosis. Drag and drop the key characteristics into the correct sections: the left for mitosis, the right for meiosis, and the overlapping middle section for shared features.</p>
       </div>

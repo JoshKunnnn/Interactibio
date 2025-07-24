@@ -213,9 +213,6 @@ const TeacherFillInTheBlanksGame = ({ gameData, onGameComplete }) => {
 
   return (
     <div className="teacher-fill-blanks-game">
-      <div className="game-instruction">
-        <p>📝 Fill in the blanks with the correct words. Use the first letter hint to help you!</p>
-      </div>
       <div className="puzzle-direction-text">
         <p><strong>Direction:</strong> Read the question and the paragraph carefully. Reflect on how both mitosis and meiosis contribute to real-life processes like muscle development and reproduction. Fill in the blanks with the correct terms related to both processes, focusing on how each one helps with growth, development, and the formation of new life. Use the first letter hint to help you!</p>
       </div>
